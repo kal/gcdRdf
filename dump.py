@@ -1,6 +1,7 @@
 import codecs
 import mysql.connector
 import datetime
+import sys
 from decimal import *
 from urllib import *
 from characters import *
@@ -371,7 +372,10 @@ class GcdExtractor:
                     for m in c.members:
                         self._write_character_appearance_in_group(uri, m, c)
         except ParserError:
-            print "Failed to parse characters string: " + characters
+            print "Failed to parse characters string: ", characters
+        except:
+            print "Failed to process characters string: ", characters
+            print "Exception detail: " , sys.exc_info()[0]
 
         #for c in characters.split(';'):
         #    c = c.strip()
