@@ -79,6 +79,8 @@ class GcdExtractor:
         self.genres = {}
         self.resources = {}
         self.appearance_count = 0
+        self._errors = open('errors.txt', 'w+')
+        self.error_count = 0
 
     def dump(self, writer):
         #self._dump_brands(writer)
@@ -371,7 +373,9 @@ class GcdExtractor:
                     for m in c.members:
                         self._write_character_appearance_in_group(uri, m, c)
         except ParserError:
-            print "Failed to parse characters string: " + characters
+           self._write_error("Failed to parse characters string: %s" % (characters))
+        except:
+            self._write_error("Failed to process characters string: %s" % (characters))
 
         #for c in characters.split(';'):
         #    c = c.strip()
@@ -380,6 +384,10 @@ class GcdExtractor:
         #    writer.write(characterUri, Rdf.type, ComicsNs.Character, 0)
         #    writer.write(characterUri, Rdf.label, c, 1)
         #writer.write(characterUri, ComicsNs.appearsIn, uri, 0)
+
+    def _write_error(self, line):
+        self._errors.write((line + "\n").encode('utf-8'))
+        self.error_count = self.error_count + 1
 
     def _write_character_appearance(self, sequenceUri, c):
         appearanceBNode = "_:appearance_%d" % self.appearance_count
@@ -433,6 +441,7 @@ class GcdExtractor:
         return "http://www.comics.org/%s/%s" % (type, id)
 
     def close(self):
+        self._errors.close()
         self.db.close()
 
 if __name__ == '__main__':
@@ -444,3 +453,4 @@ if __name__ == '__main__':
     extractor.close()
     writer.close()
     print "Wrote %d triples" % writer.tripleCount
+    print "Reported %d errors to error.txt" % extractor.error_count
