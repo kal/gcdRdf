@@ -1,6 +1,7 @@
 import codecs
 import mysql.connector
 import datetime
+import sys
 from decimal import *
 from urllib import *
 from characters import *

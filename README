@@ -1,0 +1,12 @@
+This script can be used to extract RDF data from a comics.org MySQL data dump.
+To use:
+	1) Load the comics.org data dump into a MySQL database.
+	2) Copy the file config.py.template to config.py and edit it to provide the connection details for the database
+	3) python dump.py
+	4) The RDF is written to gcd.nt in NTriples format
+
+Dependencies:
+	This script was written and tested witn Python 2.7.2 and uses the MySQL Connector/Python library (https://launchpad.net/myconnpy) to talk to the database.
+	
+Notes:
+	I recommend using UTF-8 as the collation for the MySQL database
