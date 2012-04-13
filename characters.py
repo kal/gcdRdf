@@ -96,7 +96,7 @@ class CharacterParser:
         self.current_group = None
         self.results = []
         self.parse_character_list()
-        print "%s => %s" % (s, self.results)
+        #print "%s => %s" % (s, self.results)
         return self.results
 
     def parse_character_list(self):
