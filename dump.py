@@ -104,13 +104,13 @@ class GcdExtractor:
         self.error_count = 0
 
     def dump(self, writer):
-        #self._dump_brands(writer)
-        #self._dump_countries(writer)
-        #self._dump_indicia_publishers(writer)
-        #self._dump_publishers(writer)
-        #self._dump_series(writer)
-        #self._dump_issues(writer)
-        #self._dump_story_types(writer)
+        self._dump_brands(writer)
+        self._dump_countries(writer)
+        self._dump_indicia_publishers(writer)
+        self._dump_publishers(writer)
+        self._dump_series(writer)
+        self._dump_issues(writer)
+        self._dump_story_types(writer)
         self._dump_stories(writer)
 
     def _dump_brands(self, writer):
@@ -199,11 +199,9 @@ class GcdExtractor:
             #if (row[4]):
             #    writer.write(uri, DcTerms.format, row[4], 1)
             if (row[5]):
-                startDate = "1-1-%d" % row[5]
-                writer.write(uri, SchemaOrg.startYear)
+                writer.write(uri, SchemaOrg.startYear, row[5], 1)
             if (row[6]):
-                endDate = "31-12-%d" % row[6]
-                writer.write(uri, SchemaOrg.endYear)
+                writer.write(uri, SchemaOrg.endYear, row[6], 1)
             if (row[7] and not(row[8])):
                 writer.write(uri, ComicsNs.publicationDates, row[7], 1)
             if (row[8]):
@@ -255,10 +253,10 @@ class GcdExtractor:
             if (row[8]):
                 writer.write(uri, ComicsNs.sortCode, row[8], 1)
             if (row[9] and row[9] <> "none" and row[9] <> "[none]"):
-                offerBNode = BNode('issue_offer_' + row[0])
-                writer.write(uri, SchemaOrg.offer, offerBNode)
-                writer.write(offerBNode, SchemaOrg.name, 'Cover Price')
-                writer.write(offerBNode, SchemaOrg.price, row[9])
+                offerBNode = BNode('issue_offer_' + str(row[0]))
+                writer.write(uri, SchemaOrg.offer, offerBNode, 0)
+                writer.write(offerBNode, SchemaOrg.name, 'Cover Price', 1)
+                writer.write(offerBNode, SchemaOrg.price, row[9], 0)
             if (row[10]):
                 writer.write(uri, SchemaOrg.numberOfPages, row[10], 1)
             if (row[11]):
