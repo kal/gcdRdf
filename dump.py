@@ -6,9 +6,17 @@ from decimal import *
 from urllib import *
 from characters import *
 
+class BNode :
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return self.name
+
+
 class NTriplesWriter:
     def __init__(self, path):
-        self.f = codecs.open(path, encoding='ascii', mode='w+')
+        self.f = codecs.open(path, encoding='utf_8', mode='w+')
         self.tripleCount = 0
 
     def close(self):
@@ -19,18 +27,23 @@ class NTriplesWriter:
         self.tripleCount = self.tripleCount + 1
 
     def serializeUri(self, u):
+        if (isinstance(u, BNode)):
+            return "_:%s" %(u)
         return "<%s>" %(u)
 
     def serializeLiteral(self, l, datatype):
         if (datatype):
-            return '"%s"^^<%s>' % (l.encode('unicode_escape'), datatype)
+            return '"%s"^^<%s>' % (self.escape_literal(l), datatype)
         if (isinstance(l, datetime.date)):
             return '"%d-%d-%d"^^<%s>' % (l.day, l.month, l.year, Datatypes.Date)
         if (isinstance(l, int)):
             return '"%d"^^<%s>' % (l,Datatypes.Int)
         if (isinstance(l, Decimal)):
             return '"%d"^^<%s>' % (l, Datatypes.Decimal)
-        return '"%s"' % (l.encode('unicode_escape'))
+        return '"%s"' % (self.escape_literal(l))
+
+    def escape_literal(self, l):
+        return l.replace("\\", "\\\\").replace("\n", "\\n").replace('"','\\"').replace("\r", "\\r").replace("\t","\\t")
 
 class Namespace:
     def __init__(self, root):
@@ -39,7 +52,7 @@ class Namespace:
     def __getattr__(self, localName):
         return self.root + localName
 
-SchemaOrg = Namespace("http://schema.org")
+SchemaOrg = Namespace("http://schema.org/")
 
 class Datatypes:
     Root = "http://www.w3.org/2001/XMLSchema-datatypes#"
@@ -69,6 +82,13 @@ class Foaf:
     homepage = Root + "homepage"
     Person = Root + "Person"
     name = Root + "name"
+
+class ProcessorError:
+    def __init__(self, msg = 'Processor Error'):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 class GcdExtractor:
 
@@ -235,7 +255,7 @@ class GcdExtractor:
             if (row[8]):
                 writer.write(uri, ComicsNs.sortCode, row[8], 1)
             if (row[9] and row[9] <> "none" and row[9] <> "[none]"):
-                offerBNode = '_:issue_offer_' + row[0]
+                offerBNode = BNode('issue_offer_' + row[0])
                 writer.write(uri, SchemaOrg.offer, offerBNode)
                 writer.write(offerBNode, SchemaOrg.name, 'Cover Price')
                 writer.write(offerBNode, SchemaOrg.price, row[9])
@@ -289,7 +309,8 @@ class GcdExtractor:
             if (row[4]):
                 writer.write(uri, ComicsNs.pageCount, row[4], 1)
             if (row[5]):
-                writer.write(uri, DcTerms.isPartOf, row[5], 0)
+                issueUri = self._make_uri('issue', row[5])
+                writer.write(uri, DcTerms.isPartOf, issueUri, 0)
             if (not(row[6])):
                 self._write_credits(uri, SchemaOrg.author, row[7])
             if (not(row[8])):
@@ -344,7 +365,8 @@ class GcdExtractor:
                 if (not(aliasUri in self.aliases)):
                     writer.write(aliasUri, Rdf.type, ComicsNs.Pseudonym, 0)
                     writer.write(aliasUri, Rdf.label, alias, 1)
-                    writer.write(aliasUri, ComicsNs.pseudonymOf, individualUri, 0)
+                    if (individualUri):
+                        writer.write(aliasUri, ComicsNs.pseudonymOf, individualUri, 0)
                     self.aliases[aliasUri] = True
                 writer.write(storyUri, predicateUri, aliasUri, 0)
             if (individual):
@@ -391,7 +413,7 @@ class GcdExtractor:
         self.error_count = self.error_count + 1
 
     def _write_character_appearance(self, sequenceUri, c):
-        appearanceBNode = "_:appearance_%d" % self.appearance_count
+        appearanceBNode = BNode("appearance_%d" % self.appearance_count)
         self.appearance_count = self.appearance_count + 1
         characterUri = self._assert_character(c.name)
         if (c.alias):
